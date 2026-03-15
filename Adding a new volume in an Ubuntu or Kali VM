@@ -1,0 +1,170 @@
+To **add a new volume (disk) in an Ubuntu/Kali VM and make it persistent**, you usually do two parts:
+
+1️⃣ Add a **new virtual disk** in the VM software
+2️⃣ Format and **mount it permanently** in Linux
+
+The steps are similar whether you are using **VirtualBox** or **VMware Workstation**.
+
+---
+
+# 1️⃣ Add a New Disk to the VM
+
+### In VirtualBox
+
+1. Shut down the VM.
+2. Open **Settings → Storage**.
+3. Under **Controller SATA**, click **Add Hard Disk**.
+4. Choose **Create new disk**.
+5. Select **VDI** → **Dynamically Allocated**.
+6. Choose size (example **20GB**).
+7. Start the VM.
+
+---
+
+# 2️⃣ Check the New Disk in Ubuntu/Kali
+
+Open terminal and run:
+
+```bash
+lsblk
+```
+
+Example output:
+
+```
+sda    40G
+├─sda1
+└─sda2
+sdb    20G
+```
+
+Here **sdb** is the new disk.
+
+---
+
+# 3️⃣ Create a Partition
+
+Run:
+
+```bash
+sudo fdisk /dev/sdb
+```
+
+Inside fdisk:
+
+```
+n   (new partition)
+p   (primary)
+1   (partition number)
+Enter (default)
+Enter (default)
+w   (write changes)
+```
+
+New partition becomes:
+
+```
+/dev/sdb1
+```
+
+---
+
+# 4️⃣ Format the Disk
+
+Format using **ext4**:
+
+```bash
+sudo mkfs.ext4 /dev/sdb1
+```
+
+---
+
+# 5️⃣ Create Mount Directory
+
+Example:
+
+```bash
+sudo mkdir /data
+```
+
+---
+
+# 6️⃣ Mount the Disk
+
+```bash
+sudo mount /dev/sdb1 /data
+```
+
+Check:
+
+```bash
+df -h
+```
+
+---
+
+# 7️⃣ Make It Persistent (Important)
+
+Edit **/etc/fstab** so it mounts after reboot.
+
+First get the UUID:
+
+```bash
+sudo blkid
+```
+
+Example:
+
+```
+/dev/sdb1: UUID="1234-abcd"
+```
+
+Edit fstab:
+
+```bash
+sudo nano /etc/fstab
+```
+
+Add line:
+
+```
+UUID=1234-abcd /data ext4 defaults 0 2
+```
+
+Save and exit.
+
+---
+
+# 8️⃣ Test the Persistent Mount
+
+```bash
+sudo mount -a
+```
+
+Then reboot:
+
+```bash
+sudo reboot
+```
+
+After reboot:
+
+```bash
+df -h
+```
+
+You should see `/data` mounted automatically. ✅
+
+---
+
+💡 **Pro Tip (important for Kali/Ubuntu labs):**
+
+Instead of `/dev/sdb1`, always use **UUID in `/etc/fstab`**, because disk names may change.
+
+---
+
+If you want, I can also show you:
+
+* **How to extend the root partition in Ubuntu/Kali VM** (very useful)
+* **How to create LVM volumes in Linux** (used in servers and cloud)
+* **How to add 100GB+ storage safely to Kali VM**. 🚀
