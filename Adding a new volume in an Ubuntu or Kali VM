@@ -1,29 +1,29 @@
-To **add a new volume (disk) in an Ubuntu/Kali VM and make it persistent**, you usually do two parts:
+# Add and Mount a New Disk in Ubuntu / Kali VM (Persistent Storage)
 
-1️⃣ Add a **new virtual disk** in the VM software
-2️⃣ Format and **mount it permanently** in Linux
+This guide explains how to add a new hard disk in a virtual machine and configure it so the disk remains mounted after reboot.
 
-The steps are similar whether you are using **VirtualBox** or **VMware Workstation**.
-
----
-
-# 1️⃣ Add a New Disk to the VM
-
-### In VirtualBox
-
-1. Shut down the VM.
-2. Open **Settings → Storage**.
-3. Under **Controller SATA**, click **Add Hard Disk**.
-4. Choose **Create new disk**.
-5. Select **VDI** → **Dynamically Allocated**.
-6. Choose size (example **20GB**).
-7. Start the VM.
+Tested on:
+- Ubuntu
+- Kali Linux
+- VMware Workstation
 
 ---
 
-# 2️⃣ Check the New Disk in Ubuntu/Kali
+## Table of Contents
 
-Open terminal and run:
+1. [Verify the New Disk](#verify-the-new-disk)
+2. [Create a Partition](#create-a-partition)
+3. [Format the Partition](#format-the-partition)
+4. [Create a Mount Point](#create-a-mount-point)
+5. [Mount the Disk](#mount-the-disk)
+6. [Configure Persistent Mount](#configure-persistent-mount)
+7. [Test the Configuration](#test-the-configuration)
+
+---
+
+# Verify the New Disk
+
+After adding the new virtual disk in VMware, start the VM and check the available disks.
 
 ```bash
 lsblk
@@ -32,19 +32,23 @@ lsblk
 Example output:
 
 ```
-sda    40G
+NAME   SIZE TYPE MOUNTPOINT
+sda     40G disk
 ├─sda1
 └─sda2
-sdb    20G
+sdb     20G disk
 ```
 
-Here **sdb** is the new disk.
+| Disk | Description |
+|-----|-------------|
+| sda | Existing system disk |
+| sdb | Newly added disk |
 
 ---
 
-# 3️⃣ Create a Partition
+# Create a Partition
 
-Run:
+Use `fdisk` to create a new partition on the disk.
 
 ```bash
 sudo fdisk /dev/sdb
@@ -53,15 +57,15 @@ sudo fdisk /dev/sdb
 Inside fdisk:
 
 ```
-n   (new partition)
-p   (primary)
-1   (partition number)
-Enter (default)
-Enter (default)
-w   (write changes)
+n  → create new partition
+p  → primary partition
+1  → partition number
+Enter → default first sector
+Enter → default last sector
+w  → write changes to disk
 ```
 
-New partition becomes:
+New partition created:
 
 ```
 /dev/sdb1
@@ -69,102 +73,146 @@ New partition becomes:
 
 ---
 
-# 4️⃣ Format the Disk
+# Format the Partition
 
-Format using **ext4**:
+Format the new partition using the ext4 filesystem.
 
 ```bash
 sudo mkfs.ext4 /dev/sdb1
 ```
 
+Filesystem used:
+
+| Filesystem | Purpose |
+|------------|---------|
+| ext4 | Default Linux filesystem |
+
 ---
 
-# 5️⃣ Create Mount Directory
+# Create a Mount Point
 
-Example:
+Create a directory where the disk will be mounted.
 
 ```bash
 sudo mkdir /data
 ```
 
+Mount points are directories used to access storage devices.
+
 ---
 
-# 6️⃣ Mount the Disk
+# Mount the Disk
+
+Mount the partition to the directory.
 
 ```bash
 sudo mount /dev/sdb1 /data
 ```
 
-Check:
+Verify the mount:
 
 ```bash
 df -h
 ```
 
+Example output:
+
+```
+Filesystem      Size  Used  Avail  Mounted on
+/dev/sdb1       20G   24M   19G    /data
+```
+
 ---
 
-# 7️⃣ Make It Persistent (Important)
+# Configure Persistent Mount
 
-Edit **/etc/fstab** so it mounts after reboot.
+Without configuration, the disk will unmount after reboot.
 
-First get the UUID:
+To make it permanent, edit the **fstab** file.
+
+---
+
+## Step 1: Get the UUID
 
 ```bash
 sudo blkid
 ```
 
-Example:
+Example output:
 
 ```
 /dev/sdb1: UUID="1234-abcd"
 ```
 
-Edit fstab:
+---
+
+## Step 2: Edit fstab
 
 ```bash
 sudo nano /etc/fstab
 ```
 
-Add line:
+Add the following entry:
 
 ```
-UUID=1234-abcd /data ext4 defaults 0 2
+UUID=1234-abcd   /data   ext4   defaults   0   2
 ```
 
-Save and exit.
+Explanation:
+
+| Field | Meaning |
+|------|---------|
+| UUID | Unique disk identifier |
+| /data | Mount directory |
+| ext4 | Filesystem type |
+| defaults | Default mount options |
 
 ---
 
-# 8️⃣ Test the Persistent Mount
+# Test the Configuration
+
+Apply the configuration:
 
 ```bash
 sudo mount -a
 ```
 
-Then reboot:
+If no errors appear, reboot the system.
 
 ```bash
 sudo reboot
 ```
 
-After reboot:
+After reboot, verify the mount:
 
 ```bash
 df -h
 ```
 
-You should see `/data` mounted automatically. ✅
+You should see `/data` mounted automatically.
 
 ---
 
-💡 **Pro Tip (important for Kali/Ubuntu labs):**
+# Best Practices
 
-Instead of `/dev/sdb1`, always use **UUID in `/etc/fstab`**, because disk names may change.
+- Always use **UUID** instead of `/dev/sdb1`
+- Verify disk mounts using `df -h`
+- Test `/etc/fstab` using `mount -a` before rebooting
 
 ---
 
-If you want, I can also show you:
+# Summary
 
-* **How to extend the root partition in Ubuntu/Kali VM** (very useful)
-* **How to create LVM volumes in Linux** (used in servers and cloud)
-* **How to add 100GB+ storage safely to Kali VM**. 🚀
+| Step | Action |
+|-----|-------|
+| 1 | Verify new disk using `lsblk` |
+| 2 | Create partition with `fdisk` |
+| 3 | Format partition using `mkfs.ext4` |
+| 4 | Create mount directory |
+| 5 | Mount disk |
+| 6 | Configure `/etc/fstab` |
+| 7 | Reboot and verify |
+
+---
+  
+Environment: Ubuntu / Kali Linux VM
