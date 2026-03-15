@@ -7,8 +7,6 @@ Tested on:
 - Kali Linux
 - VMware Workstation
 
----
-
 ## Table of Contents
 
 1. [Verify the New Disk](#verify-the-new-disk)
@@ -19,18 +17,13 @@ Tested on:
 6. [Configure Persistent Mount](#configure-persistent-mount)
 7. [Test the Configuration](#test-the-configuration)
 
----
-
-# Verify the New Disk
+# 1. Verify the New Disk
 
 After adding the new virtual disk in VMware, start the VM and check the available disks.
 
-```bash
-lsblk
-```
+Open terminal and type - lsblk
 
 Example output:
-
 ```
 NAME   SIZE TYPE MOUNTPOINT
 sda     40G disk
@@ -44,18 +37,13 @@ sdb     20G disk
 | sda | Existing system disk |
 | sdb | Newly added disk |
 
----
-
-# Create a Partition
+# 2. Create a Partition
 
 Use `fdisk` to create a new partition on the disk.
 
-```bash
 sudo fdisk /dev/sdb
-```
 
 Inside fdisk:
-
 ```
 n  → create new partition
 p  → primary partition
@@ -66,20 +54,15 @@ w  → write changes to disk
 ```
 
 New partition created:
-
 ```
 /dev/sdb1
 ```
 
----
-
-# Format the Partition
+# 3. Format the Partition
 
 Format the new partition using the ext4 filesystem.
 
-```bash
-sudo mkfs.ext4 /dev/sdb1
-```
+Open terminal and type - sudo mkfs.ext4 /dev/sdb1
 
 Filesystem used:
 
@@ -87,79 +70,54 @@ Filesystem used:
 |------------|---------|
 | ext4 | Default Linux filesystem |
 
----
-
-# Create a Mount Point
+# 4. Create a Mount Point
 
 Create a directory where the disk will be mounted.
 
-```bash
-sudo mkdir /data
-```
+Open terminal and type - sudo mkdir /data
 
 Mount points are directories used to access storage devices.
 
----
-
-# Mount the Disk
+# 5. Mount the Disk
 
 Mount the partition to the directory.
 
-```bash
-sudo mount /dev/sdb1 /data
-```
+Open terminal and type - sudo mount /dev/sdb1 /data
 
 Verify the mount:
-
-```bash
-df -h
-```
+Open terminal and type - df -h
 
 Example output:
-
 ```
 Filesystem      Size  Used  Avail  Mounted on
 /dev/sdb1       20G   24M   19G    /data
 ```
 
----
-
-# Configure Persistent Mount
+# 6. Configure Persistent Mount
 
 Without configuration, the disk will unmount after reboot.
 
-To make it permanent, edit the **fstab** file.
-
----
+To make it permanent, edit the fstab file.
 
 ## Step 1: Get the UUID
 
-```bash
-sudo blkid
-```
+Open terminal and type - sudo blkid
 
 Example output:
-
 ```
 /dev/sdb1: UUID="1234-abcd"
 ```
 
----
-
 ## Step 2: Edit fstab
 
-```bash
-sudo nano /etc/fstab
-```
+Open terminal and type - sudo nano /etc/fstab
 
 Add the following entry:
-
 ```
 UUID=1234-abcd   /data   ext4   defaults   0   2
 ```
 
 Explanation:
-
 | Field | Meaning |
 |------|---------|
 | UUID | Unique disk identifier |
@@ -169,37 +127,23 @@ Explanation:
 
 ---
 
-# Test the Configuration
+# 7. Test the Configuration
 
 Apply the configuration:
 
-```bash
-sudo mount -a
-```
+Open terminal and type - sudo mount -a
 
-If no errors appear, reboot the system.
+If no errors appear, reboot the system. After reboot, verify the mount:
 
-```bash
-sudo reboot
-```
-
-After reboot, verify the mount:
-
-```bash
-df -h
-```
+Open terminal and type - df -h
 
 You should see `/data` mounted automatically.
-
----
 
 # Best Practices
 
 - Always use **UUID** instead of `/dev/sdb1`
 - Verify disk mounts using `df -h`
 - Test `/etc/fstab` using `mount -a` before rebooting
-
----
 
 # Summary
 
@@ -213,6 +157,4 @@ You should see `/data` mounted automatically.
 | 6 | Configure `/etc/fstab` |
 | 7 | Reboot and verify |
 
----
-  
 Environment: Ubuntu / Kali Linux VM
